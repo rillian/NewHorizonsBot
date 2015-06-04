@@ -68,16 +68,33 @@ def post_tweet(status, media_fn):
     log.info(response)
     return twitter, response
 
+class Memory:
+    """Store a list of unique ids for images we've previously seen."""
+    def __init__(self, filename):
+        self.filename = filename
+        self.store = []
+        try:
+            self.store = [line.strip() for line in
+                          open(self.filename).readlines()]
+        except FileNotFoundError:
+            log.warning('Memory store ' + self.filename + ' not found')
+
+    def __contains__(self, item):
+        """Implement membership check so 'if x in foo' works."""
+        return item in self.store
+
+    def append(self, unique_id):
+        """We're an append-only store. We never forget anything,
+           so we implement this instead of assignment + saving."""
+        self.store.append(unique_id)
+        history = open(self.filename, 'a')
+        history.write(unique_id + '\n')
+        history.close()
 
 if __name__ == '__main__':
     # Try to find an image that has not already been tweeted
     # Which images have already been tweeted?
-    try:
-        IMAGES_TWEETED = [line.strip() for line in
-                          open('images-tweeted.txt').readlines()]
-    except FileNotFoundError:
-        log.warning('images-tweeted.txt not found')
-        IMAGES_TWEETED = []
+    known_images = Memory('images-tweeted.txt')
 
     images = get_latest_images()
     # Go back-to-front to tweet the oldest non-tweeted image first.
@@ -85,7 +102,7 @@ if __name__ == '__main__':
         archive_filename = images['jpegArr'][idx]
         # The same image is sometimes re-posted using a different "_sci_x" suffix 
         unique_id = archive_filename.split('_sci_')[0]
-        if unique_id not in IMAGES_TWEETED:
+        if unique_id not in known_images:
             status, image_fn = generate_tweet(jpeg=images['jpegArr'][idx],
                                               utc=images['UTCArr'][idx],
                                               desc=images['DescArr'][idx],
@@ -95,8 +112,6 @@ if __name__ == '__main__':
             log.info(status)
             twitter, response = post_tweet(status, image_fn)
             # Remember that we tweeted this image
-            history = open('images-tweeted.txt', 'a')
-            history.write(unique_id + '\n')
-            history.close()
+            known_images.append(unique_id)
             # We're done
             break
