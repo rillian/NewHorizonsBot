@@ -5,7 +5,6 @@ try:
 except ImportError:  # Darn Python 2
     from urllib import urlopen, urlretrieve
 import re
-from twython import Twython
 from astropy import log
 from astropy.time import Time
 
@@ -59,6 +58,7 @@ def generate_tweet(jpeg, utc, desc, target, myrange, exp):
 
 def post_tweet(status, media_fn):
     """Post media and an associated status message to Twitter."""
+    from twython import Twython
     import secrets
     twitter = Twython(secrets.APP_KEY, secrets.APP_SECRET,
                       secrets.OAUTH_TOKEN, secrets.OAUTH_TOKEN_SECRET)
