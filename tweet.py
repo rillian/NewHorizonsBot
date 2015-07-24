@@ -4,6 +4,7 @@ try:
     from urllib.request import urlopen, urlretrieve
 except ImportError:  # Darn Python 2
     from urllib import urlopen, urlretrieve
+import os.path
 import re
 from astropy import log
 from astropy.time import Time
@@ -51,6 +52,7 @@ def generate_tweet(jpeg, utc, desc, target, myrange, exp):
     # Finally, make sure the image we are tweeting is on disk
     jpeg_prefix = 'http://pluto.jhuapl.edu/soc/Pluto-Encounter/'
     image_fn = '/tmp/newhorizonsbot.jpg'
+    image_fn = os.path.join('images', os.path.basename(jpeg))
     log.info('Downloading {}'.format(jpeg_prefix + jpeg))
     urlretrieve(jpeg_prefix + jpeg, image_fn)
     return (status, image_fn)
@@ -110,8 +112,6 @@ if __name__ == '__main__':
                                               myrange=images['RangeArr'][idx],
                                               exp=images['ExpArr'][idx])
             log.info(status)
-            twitter, response = post_tweet(status, image_fn)
+            #twitter, response = post_tweet(status, image_fn)
             # Remember that we tweeted this image
             known_images.append(unique_id)
-            # We're done
-            break
